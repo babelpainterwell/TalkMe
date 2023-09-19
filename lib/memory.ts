@@ -21,10 +21,13 @@ export class MemoryManager {
 
   public async init() {
     if (this.vectorDBClient instanceof PineconeClient) {
+      console.log("***")
       await this.vectorDBClient.init({
         apiKey: process.env.PINECONE_API_KEY!,
         environment: process.env.PINECONE_ENVIRONMENT!,
       });
+      // this.vectorDBClient.projectName = 'default';
+      console.log("****")
     }
   }
 
@@ -55,7 +58,9 @@ export class MemoryManager {
 
   public static async getInstance(): Promise<MemoryManager> {
     if (!MemoryManager.instance) {
+      console.log("*")
       MemoryManager.instance = new MemoryManager();
+      console.log("**")
       await MemoryManager.instance.init();
     }
     return MemoryManager.instance;
