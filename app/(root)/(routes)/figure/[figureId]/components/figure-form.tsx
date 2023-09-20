@@ -241,7 +241,7 @@ export const FigureForm = ({
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        Describe in detail your Avatar Figure's backstory and relevant details.
+                                        Describe in detail your Avatar Figure&apos;s backstory and relevant details.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -263,7 +263,7 @@ export const FigureForm = ({
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        Describe in detail your Avatar Figure's backstory and relevant details.
+                                        Write couple of examples of a human chatting with your Avatar Figure, write expected answers.
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
