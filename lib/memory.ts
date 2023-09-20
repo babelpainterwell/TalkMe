@@ -74,7 +74,7 @@ export class MemoryManager {
       score: Date.now(),
       member: text,
     });
-
+    // also need to add messages to vector database 
     return result;
   }
 
