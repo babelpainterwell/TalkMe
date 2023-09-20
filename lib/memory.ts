@@ -3,8 +3,8 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { PineconeClient } from "@pinecone-database/pinecone";
 import { PineconeStore } from "langchain/vectorstores/pinecone";
 
-export type FigureKey = {
-  figureName: string;
+export type CompanionKey = {
+  companionName: string;
   modelName: string;
   userId: string;
 };
@@ -21,62 +21,55 @@ export class MemoryManager {
 
   public async init() {
     if (this.vectorDBClient instanceof PineconeClient) {
-      console.log("***")
       await this.vectorDBClient.init({
         apiKey: process.env.PINECONE_API_KEY!,
         environment: process.env.PINECONE_ENVIRONMENT!,
       });
-      // this.vectorDBClient.projectName = 'default';
-      console.log("****")
     }
   }
 
   public async vectorSearch(
     recentChatHistory: string,
-    figureFileName: string
+    companionFileName: string
   ) {
-    console.log("a")
     const pineconeClient = <PineconeClient>this.vectorDBClient;
-    console.log("b")
+
     const pineconeIndex = pineconeClient.Index(
       process.env.PINECONE_INDEX! || ""
     );
-    console.log("b")
+
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings({ openAIApiKey: process.env.OPENAI_API_KEY }),
       { pineconeIndex }
     ); 
-    console.log("d")
+
     const similarDocs = await vectorStore
-      .similaritySearch(recentChatHistory, 3, { fileName: figureFileName })
+      .similaritySearch(recentChatHistory, 3, { fileName: companionFileName })
       .catch((err) => {
         console.log("WARNING: failed to get vector search results.", err);
       });
-      console.log("e")
     return similarDocs;
   }
 
   public static async getInstance(): Promise<MemoryManager> {
     if (!MemoryManager.instance) {
-      console.log("*")
       MemoryManager.instance = new MemoryManager();
-      console.log("**")
       await MemoryManager.instance.init();
     }
     return MemoryManager.instance;
   }
 
-  private generateRedisFigureKey(figureKey: FigureKey): string {
-    return `${figureKey.figureName}-${figureKey.modelName}-${figureKey.userId}`;
+  private generateRedisCompanionKey(companionKey: CompanionKey): string {
+    return `${companionKey.companionName}-${companionKey.modelName}-${companionKey.userId}`;
   }
 
-  public async writeToHistory(text: string, figureKey: FigureKey) {
-    if (!figureKey || typeof figureKey.userId == "undefined") {
-      console.log("Figure key set incorrectly");
+  public async writeToHistory(text: string, companionKey: CompanionKey) {
+    if (!companionKey || typeof companionKey.userId == "undefined") {
+      console.log("Companion key set incorrectly");
       return "";
     }
 
-    const key = this.generateRedisFigureKey(figureKey);
+    const key = this.generateRedisCompanionKey(companionKey);
     const result = await this.history.zadd(key, {
       score: Date.now(),
       member: text,
@@ -85,13 +78,13 @@ export class MemoryManager {
     return result;
   }
 
-  public async readLatestHistory(figureKey: FigureKey): Promise<string> {
-    if (!figureKey || typeof figureKey.userId == "undefined") {
-      console.log("Figure key set incorrectly");
+  public async readLatestHistory(companionKey: CompanionKey): Promise<string> {
+    if (!companionKey || typeof companionKey.userId == "undefined") {
+      console.log("Companion key set incorrectly");
       return "";
     }
 
-    const key = this.generateRedisFigureKey(figureKey);
+    const key = this.generateRedisCompanionKey(companionKey);
     let result = await this.history.zrange(key, 0, Date.now(), {
       byScore: true,
     });
@@ -104,9 +97,9 @@ export class MemoryManager {
   public async seedChatHistory(
     seedContent: String,
     delimiter: string = "\n",
-    figureKey: FigureKey
+    companionKey: CompanionKey
   ) {
-    const key = this.generateRedisFigureKey(figureKey);
+    const key = this.generateRedisCompanionKey(companionKey);
     if (await this.history.exists(key)) {
       console.log("User already has chat history");
       return;
@@ -120,3 +113,4 @@ export class MemoryManager {
     }
   }
 }
+
